@@ -38,6 +38,15 @@
             }
         },
         {
+            "name": "x64-release-wdinfo",
+            "displayName": "x64 Release WithDebInfo",
+            "inherits": "x64-release",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "FETCHCONTENT_BASE_DIR": "D:/MyProjects/libraries/CMake"
+            }
+        },
+        {
             "name": "x86-debug",
             "displayName": "x86 Debug",
             "inherits": "windows-base",

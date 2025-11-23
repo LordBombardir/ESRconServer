@@ -1,21 +1,41 @@
-﻿# CMakeList.txt: проект CMake для RconServer; включите исходный код и определения,
-# укажите здесь логику для конкретного проекта.
-#
-cmake_minimum_required (VERSION 3.10)
+﻿cmake_minimum_required(VERSION 3.15)
 
-# Включение горячей перезагрузки для компиляторов MSVC, если поддерживается.
-if (POLICY CMP0141)
-  cmake_policy(SET CMP0141 NEW)
-  set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
-endif()
+project("RconServer")
 
-project ("RconServer")
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Добавьте источник в исполняемый файл этого проекта.
-add_executable (RconServer "RconServer.cpp" "RconServer.h")
+include(FetchContent)
 
-if (CMAKE_VERSION VERSION_GREATER 3.12)
-  set_property(TARGET RconServer PROPERTY CXX_STANDARD 20)
-endif()
+FetchContent_Declare(
+    endstone
+    GIT_REPOSITORY https://github.com/EndstoneMC/endstone.git
+    GIT_TAG v0.10 
+)
+FetchContent_MakeAvailable(endstone)
 
-# TODO: Добавьте тесты и целевые объекты, если это необходимо.
+FetchContent_Declare(
+    boost
+    URL https://archives.boost.io/release/1.89.0/source/boost_1_89_0.tar.gz
+)
+FetchContent_MakeAvailable(boost)
+
+FetchContent_Declare(
+    nlohmann_json
+    GIT_REPOSITORY https://github.com/nlohmann/json.git
+    GIT_TAG v3.12.0
+)
+FetchContent_MakeAvailable(nlohmann_json)
+
+file(GLOB_RECURSE SRC_FILES
+    "src/*.cpp"
+    "src/*.h"
+)
+
+endstone_add_plugin(
+    ${PROJECT_NAME}
+    ${SRC_FILES}
+)
+
+target_include_directories(${PROJECT_NAME} PRIVATE ${boost_SOURCE_DIR})
+target_link_libraries(${PROJECT_NAME} PRIVATE nlohmann_json::nlohmann_json)
