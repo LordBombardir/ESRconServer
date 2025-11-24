@@ -1,0 +1,86 @@
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+  release:
+    types: [ published ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            c_compiler: clang
+            cpp_compiler: clang++
+            artifact_name: linux-x64
+          - os: windows-latest
+            c_compiler: cl
+            cpp_compiler: cl
+            artifact_name: windows-x64
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Clang (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        uses: egor-tensin/setup-clang@v1
+
+      # --- Setup CMake ---
+      - name: Setup CMake
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          version: '4.2.0'
+
+      - name: Configure CMake
+        run: cmake -B build \
+          -S ${{ github.workspace }} \
+          -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
+          -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
+          -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release -- -j$(nproc)
+
+      - name: Create archive (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          mkdir artifacts
+          find build -name "*.so" -exec cp {} artifacts/ \;
+          cd artifacts
+          zip "../${{ github.event.repository.name }}-${{ matrix.artifact_name }}.zip" *.so
+
+      - name: Create archive (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          mkdir artifacts
+          Get-ChildItem -Recurse build -Include *.dll, *.lib, *.exp, *.pdb | Copy-Item -Destination artifacts
+          powershell Compress-Archive -Path artifacts\* `
+            -DestinationPath "${{ github.event.repository.name }}-${{ matrix.artifact_name }}.zip"
+
+      # Upload artifact (for push/PR)
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event.repository.name }}-${{ matrix.artifact_name }}.zip
+          path: ${{ github.event.repository.name }}-${{ matrix.artifact_name }}.zip
+
+  upload-release:
+    needs: build
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            **/*linux-x64.zip
+            **/*windows-x64.zip
