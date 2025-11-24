@@ -30,11 +30,17 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         uses: egor-tensin/setup-clang@v1
 
-      - name: Install libc++
+      - name: Install libc++ and libc++abi (Linux)
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
           sudo apt-get install -y libc++-dev libc++abi-dev
+
+      - name: Export flags for libc++ (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          echo "CXXFLAGS='-pthread'" >> $GITHUB_ENV
+          echo "LDFLAGS='-pthread'" >> $GITHUB_ENV
         
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v2
@@ -44,7 +50,9 @@ jobs:
           -S ${{ github.workspace }} \
           -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
           -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
-          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_CXX_FLAGS="$CXXFLAGS" \
+          -DCMAKE_SHARED_LINKER_FLAGS="$LDFLAGS"
 
       - name: Build (Linux)
         if: matrix.os == 'ubuntu-latest'
@@ -70,12 +78,12 @@ jobs:
           powershell Compress-Archive -Path artifacts\* `
             -DestinationPath "${{ github.event.repository.name }}-${{ matrix.artifact_name }}.zip"
 
-      # Upload artifact (for push/PR)
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ github.event.repository.name }}-${{ matrix.artifact_name }}.zip
           path: ${{ github.event.repository.name }}-${{ matrix.artifact_name }}.zip
+          if-no-files-found: error
 
   upload-release:
     needs: build
