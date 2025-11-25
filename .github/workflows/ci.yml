@@ -99,6 +99,11 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v4
 
+      - name: Pack artifacts
+        run: |
+          zip -r ${{ github.event.repository.name }}-linux-x64.zip ${{ github.event.repository.name }}-linux-x64
+          zip -r ${{ github.event.repository.name }}-windows-x64.zip ${{ github.event.repository.name }}-windows-x64
+
       - name: Calculate SHA256
         id: calculate-sha256
         run: |
