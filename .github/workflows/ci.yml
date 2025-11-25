@@ -21,23 +21,27 @@ jobs:
             c_compiler: cl
             cpp_compiler: cl
             artifact_name: windows-x64
+          - os: debian-12
+            c_compiler: clang
+            cpp_compiler: clang++
+            artifact_name: debian12-x64
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Install libc++ and libc++abi (Linux)
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'debian-12'
         run: |
           sudo apt-get update
           sudo apt-get install -y libc++-dev libc++abi-dev
 
       - name: Setup Clang (Linux)
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'debian-12'
         uses: egor-tensin/setup-clang@v1
 
       - name: Configure Clang (Linux)
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'debian-12'
         run: |
           echo "CC=clang" >> $GITHUB_ENV
           echo "CXX=clang++" >> $GITHUB_ENV
@@ -46,7 +50,7 @@ jobs:
         uses: jwlawson/actions-setup-cmake@v2
 
       - name: Configure CMake (Linux)
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'debian-12'
         run: cmake -B build \
           -S ${{ github.workspace }} \
           -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
@@ -64,7 +68,7 @@ jobs:
           -DBOOST_ERROR_CODE_HEADER_ONLY=ON
 
       - name: Build (Linux)
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'debian-12'
         run: cmake --build build --config Release -- -j$(nproc)
 
       - name: Build (Windows)
@@ -72,7 +76,7 @@ jobs:
         run: cmake --build build --config Release
 
       - name: Create bin folder (Linux)
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'debian-12'
         run: |
           mkdir artifacts-${{ matrix.artifact_name }}
           find build -name "*.so" -exec cp {} artifacts-${{ matrix.artifact_name }}/ \;
