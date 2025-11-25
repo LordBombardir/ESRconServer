@@ -99,10 +99,10 @@ jobs:
       - name: Build in Debian 12
         run: |
           docker run --rm -v ${{ github.workspace }}:/src -w /src debian:12 bash -c "
-            apt-get update && apt-get install -y build-essential clang cmake libc++-dev libc++abi-dev
+            apt-get update && apt-get install -y build-essential clang cmake libc++-dev libc++abi-dev git
             mkdir -p build && cd build
-            cmake .. -DCMAKE_BUILD_TYPE=Release
-            cmake --build . -- -j\$(nproc)
+            cmake .. -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release
+            cmake --build . --config Release -- -j\$(nproc)
             mkdir -p /src/artifacts-debian12
             find . -name '*.so' -exec cp {} /src/artifacts-debian12/ \;"
 
