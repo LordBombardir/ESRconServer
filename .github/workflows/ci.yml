@@ -51,9 +51,7 @@ jobs:
           -S ${{ github.workspace }} \
           -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
           -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_CXX_FLAGS="-stdlib=libc++ -pthread" \
-          -DCMAKE_SHARED_LINKER_FLAGS="-stdlib=libc++ -lc++abi -pthread"
+          -DCMAKE_BUILD_TYPE=Release
 
       - name: Configure CMake (Windows)
         if: matrix.os == 'windows-latest'
@@ -94,7 +92,7 @@ jobs:
         with:
           name: ${{ github.event.repository.name }}-${{ matrix.artifact_name }}.zip
           path: ${{ github.event.repository.name }}-${{ matrix.artifact_name }}.zip
-          if-no-files-found: error
+          compression-level: 0
 
   upload-release:
     needs: build
