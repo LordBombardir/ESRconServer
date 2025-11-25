@@ -91,11 +91,16 @@ jobs:
             artifacts-${{ matrix.artifact_name }}/
 
   upload-release:
-    needs: build
     if: github.event_name == 'release'
+    needs: build
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Download artifacts
         uses: actions/download-artifact@v4
 
