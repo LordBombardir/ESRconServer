@@ -71,28 +71,24 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: cmake --build build --config Release
 
-      - name: Create archive (Linux)
+      - name: Create bin folder (Linux)
         if: matrix.os == 'ubuntu-latest'
         run: |
-          mkdir artifacts
-          find build -name "*.so" -exec cp {} artifacts/ \;
-          cd artifacts
-          zip "../${{ github.event.repository.name }}-${{ matrix.artifact_name }}.zip" *.so
+          mkdir artifacts/${{ matrix.artifact_name }}
+          find build -name "*.so" -exec cp {} artifacts/${{ matrix.artifact_name }} \;
 
-      - name: Create archive (Windows)
+      - name: Create bin folder (Windows)
         if: matrix.os == 'windows-latest'
         run: |
-          mkdir artifacts
-          Get-ChildItem -Recurse build -Include *.dll, *.lib, *.exp, *.pdb | Copy-Item -Destination artifacts
-          powershell Compress-Archive -Path artifacts\* `
-            -DestinationPath "${{ github.event.repository.name }}-${{ matrix.artifact_name }}.zip"
+          mkdir artifacts/${{ matrix.artifact_name }}
+          Get-ChildItem -Recurse build -Include *.dll, *.lib, *.exp, *.pdb | Copy-Item -Destination artifacts/${{ matrix.artifact_name }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ github.event.repository.name }}-${{ matrix.artifact_name }}.zip
-          path: ${{ github.event.repository.name }}-${{ matrix.artifact_name }}.zip
-          compression-level: 0
+          path: |
+            artifacts/${{ matrix.artifact_name }}/
 
   upload-release:
     needs: build
