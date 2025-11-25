@@ -21,10 +21,6 @@ jobs:
             c_compiler: cl
             cpp_compiler: cl
             artifact_name: windows-x64
-          - os: debian-12
-            c_compiler: clang
-            cpp_compiler: clang++
-            artifact_name: debian12-x64
 
     steps:
       - name: Checkout repository
@@ -94,8 +90,30 @@ jobs:
           path: |
             artifacts-${{ matrix.artifact_name }}/
 
+  build-debian12:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Build in Debian 12
+        run: |
+          docker run --rm -v ${{ github.workspace }}:/src -w /src debian:12 bash -c "
+            apt-get update && apt-get install -y build-essential clang cmake libc++-dev libc++abi-dev
+            mkdir -p build && cd build
+            cmake .. -DCMAKE_BUILD_TYPE=Release
+            cmake --build . -- -j\$(nproc)
+            mkdir -p /src/artifacts-debian12
+            find . -name '*.so' -exec cp {} /src/artifacts-debian12/ \;"
+
+      - name: Upload Debian 12 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event.repository.name }}-debian12-x64
+          path: artifacts-debian12/
+
   upload-release:
-    needs: build
+    needs: [build, build-debian12]
     if: github.event_name == 'release'
     runs-on: ubuntu-latest
 
