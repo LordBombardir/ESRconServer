@@ -103,7 +103,7 @@ jobs:
             echo "CC=clang" >> $GITHUB_ENV
             echo "CXX=clang++" >> $GITHUB_ENV
             mkdir -p build && cd build
-            cmake .. -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release
+            cmake .. -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_STANDARD=20 -DCMAKE_BUILD_TYPE=Release
             cmake --build . --config Release -- -j\$(nproc)
             mkdir -p /src/artifacts-debian12
             find . -name '*.so' -exec cp {} /src/artifacts-debian12/ \;"
