@@ -36,6 +36,12 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         uses: egor-tensin/setup-clang@v1
 
+      - name: Configure Clang (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          echo "CC=clang" >> $GITHUB_ENV
+          echo "CXX=clang++" >> $GITHUB_ENV
+
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v2
 
