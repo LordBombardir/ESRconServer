@@ -26,33 +26,39 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Clang (Linux)
-        if: matrix.os == 'ubuntu-latest'
-        uses: egor-tensin/setup-clang@v1
-
       - name: Install libc++ and libc++abi (Linux)
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
           sudo apt-get install -y libc++-dev libc++abi-dev
 
-      - name: Export flags for libc++ (Linux)
+      - name: Setup Clang (Linux)
         if: matrix.os == 'ubuntu-latest'
-        run: |
-          echo "CXXFLAGS='-pthread'" >> $GITHUB_ENV
-          echo "LDFLAGS='-pthread'" >> $GITHUB_ENV
-        
+        uses: egor-tensin/setup-clang@v1
+
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v2
 
-      - name: Configure CMake
+      - name: Configure CMake (Linux)
+        if: matrix.os == 'ubuntu-latest'
         run: cmake -B build \
           -S ${{ github.workspace }} \
           -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
           -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
           -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_CXX_FLAGS="$CXXFLAGS" \
-          -DCMAKE_SHARED_LINKER_FLAGS="$LDFLAGS"
+          -DCMAKE_CXX_FLAGS="-stdlib=libc++ -pthread" \
+          -DCMAKE_SHARED_LINKER_FLAGS="-stdlib=libc++ -lc++abi -pthread" \
+          -DBOOST_ERROR_CODE_HEADER_ONLY=ON
+
+      - name: Configure CMake (Windows)
+        if: matrix.os == 'windows-latest'
+        run: cmake -B build \
+          -S ${{ github.workspace }} \
+          -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
+          -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_CXX_FLAGS="/EHsc /D_WIN32_WINNT=0x0601" \
+          -DBOOST_ERROR_CODE_HEADER_ONLY=ON
 
       - name: Build (Linux)
         if: matrix.os == 'ubuntu-latest'
